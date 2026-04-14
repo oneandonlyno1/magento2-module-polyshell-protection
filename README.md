@@ -6,6 +6,8 @@ Comprehensive defense-in-depth module that closes the **PolyShell** unrestricted
 
 **Reference:** [Sansec — PolyShell: unrestricted file upload in Magento and Adobe Commerce](https://sansec.io/research/magento-polyshell)
 
+If this module helped protect your store, consider [buying me a coffee ☕](https://ko-fi.com/aregowe) — it helps me keep maintaining and improving it.
+
 ## Installation
 
 ### Via Composer (recommended)
@@ -228,3 +230,7 @@ docker compose exec phpfpm php vendor/bin/phpunit app/code/Aregowe/PolyShellProt
 3. **Test blocked paths**: Request `/media/custom_options/quote/test.php` directly. Expect 404.
 4. **Test legitimate uploads**: Verify product image uploads via admin still work normally.
 5. **Scan for existing compromise**: `find pub/media/custom_options -name '*.php' -o -name '*.phtml'` should return no results. Also check: `find . -name 'accesson.php' -type f`.
+
+## Support
+
+If this module saved your store, consider [buying me a coffee ☕ on Ko-fi](https://ko-fi.com/aregowe). Every tip is appreciated and helps fund continued security research and maintenance.
