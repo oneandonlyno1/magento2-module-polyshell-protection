@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Janderson\PolyShellProtection\Plugin;
+namespace Aregowe\PolyShellProtection\Plugin;
 
 use Magento\Framework\Api\Data\ImageContentInterface;
 use Magento\Framework\Api\ImageContentValidator;
 use Magento\Framework\Exception\InputException;
-use Janderson\PolyShellProtection\Model\FileUploadGuard;
-use Janderson\PolyShellProtection\Model\PolyglotFileDetector;
-use Janderson\PolyShellProtection\Model\SecurityLogSanitizer;
-use Janderson\PolyShellProtection\Logger\Logger;
+use Aregowe\PolyShellProtection\Model\FileUploadGuard;
+use Aregowe\PolyShellProtection\Model\PolyglotFileDetector;
+use Aregowe\PolyShellProtection\Model\SecurityLogSanitizer;
+use Aregowe\PolyShellProtection\Logger\Logger;
 
 /**
  * Hardened extension + content validation on the framework-level ImageContentValidator.

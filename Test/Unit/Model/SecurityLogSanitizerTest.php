@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Janderson\PolyShellProtection\Test\Unit\Model;
+namespace Aregowe\PolyShellProtection\Test\Unit\Model;
 
 use PHPUnit\Framework\TestCase;
-use Janderson\PolyShellProtection\Model\SecurityLogSanitizer;
+use Aregowe\PolyShellProtection\Model\SecurityLogSanitizer;
 
 class SecurityLogSanitizerTest extends TestCase
 {

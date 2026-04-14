@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Janderson\PolyShellProtection\Plugin;
+namespace Aregowe\PolyShellProtection\Plugin;
 
 use Magento\Framework\App\ResponseInterface;
 use Magento\Framework\Exception\NotFoundException;
 use Magento\Framework\HTTP\PhpEnvironment\RemoteAddress;
 use Magento\MediaStorage\App\Media;
-use Janderson\PolyShellProtection\Logger\Logger;
-use Janderson\PolyShellProtection\Model\SecurityLogSanitizer;
-use Janderson\PolyShellProtection\Model\SecurityPathGuard;
+use Aregowe\PolyShellProtection\Logger\Logger;
+use Aregowe\PolyShellProtection\Model\SecurityLogSanitizer;
+use Aregowe\PolyShellProtection\Model\SecurityPathGuard;
 
 class BlockSuspiciousMediaAppPathPlugin
 {

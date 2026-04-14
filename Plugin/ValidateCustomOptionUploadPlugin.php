@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Janderson\PolyShellProtection\Plugin;
+namespace Aregowe\PolyShellProtection\Plugin;
 
 use Magento\Catalog\Model\CustomOptions\CustomOptionProcessor;
 use Magento\Framework\Exception\InputException;
 use Magento\Framework\HTTP\PhpEnvironment\RemoteAddress;
 use Magento\Quote\Api\Data\CartItemInterface;
-use Janderson\PolyShellProtection\Model\SecurityLogSanitizer;
-use Janderson\PolyShellProtection\Logger\Logger;
+use Aregowe\PolyShellProtection\Model\SecurityLogSanitizer;
+use Aregowe\PolyShellProtection\Logger\Logger;
 
 class ValidateCustomOptionUploadPlugin
 {

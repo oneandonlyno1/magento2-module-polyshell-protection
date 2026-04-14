@@ -6,6 +6,6 @@ use Magento\Framework\Component\ComponentRegistrar;
 
 ComponentRegistrar::register(
     ComponentRegistrar::MODULE,
-    'Janderson_PolyShellProtection',
+    'Aregowe_PolyShellProtection',
     __DIR__
 );

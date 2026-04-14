@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Janderson\PolyShellProtection\Logger;
+namespace Aregowe\PolyShellProtection\Logger;
 
 use Monolog\Logger as MonologLogger;
 

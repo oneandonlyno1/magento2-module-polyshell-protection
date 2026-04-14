@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Janderson\PolyShellProtection\Test\Unit\Plugin;
+namespace Aregowe\PolyShellProtection\Test\Unit\Plugin;
 
 use Magento\Customer\Model\FileProcessor;
 use Magento\Framework\Exception\LocalizedException;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Janderson\PolyShellProtection\Logger\Logger;
-use Janderson\PolyShellProtection\Model\SecurityLogSanitizer;
-use Janderson\PolyShellProtection\Plugin\BlockCustomerFileUploadPlugin;
+use Aregowe\PolyShellProtection\Logger\Logger;
+use Aregowe\PolyShellProtection\Model\SecurityLogSanitizer;
+use Aregowe\PolyShellProtection\Plugin\BlockCustomerFileUploadPlugin;
 
 class BlockCustomerFileUploadPluginTest extends TestCase
 {

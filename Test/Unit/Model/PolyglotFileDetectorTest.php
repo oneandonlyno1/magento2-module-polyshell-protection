@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Janderson\PolyShellProtection\Test\Unit\Model;
+namespace Aregowe\PolyShellProtection\Test\Unit\Model;
 
 use Magento\Framework\Exception\InputException;
-use Janderson\PolyShellProtection\Model\PolyglotFileDetector;
+use Aregowe\PolyShellProtection\Model\PolyglotFileDetector;
 use PHPUnit\Framework\TestCase;
 
 class PolyglotFileDetectorTest extends TestCase

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Janderson\PolyShellProtection\Model;
+namespace Aregowe\PolyShellProtection\Model;
 
 class SecurityPathGuard
 {

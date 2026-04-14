@@ -1,24 +1,24 @@
 <?xml version="1.0"?>
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
     <!-- Security Models -->
-    <type name="Janderson\PolyShellProtection\Model\FileUploadGuard">
+    <type name="Aregowe\PolyShellProtection\Model\FileUploadGuard">
         <arguments>
-            <argument name="polyglotDetector" xsi:type="object">Janderson\PolyShellProtection\Model\PolyglotFileDetector</argument>
-            <argument name="patternDetector" xsi:type="object">Janderson\PolyShellProtection\Model\AttackPatternDetector</argument>
+            <argument name="polyglotDetector" xsi:type="object">Aregowe\PolyShellProtection\Model\PolyglotFileDetector</argument>
+            <argument name="patternDetector" xsi:type="object">Aregowe\PolyShellProtection\Model\AttackPatternDetector</argument>
         </arguments>
     </type>
 
     <!-- Logger Configuration -->
-    <type name="Janderson\PolyShellProtection\Logger\Logger">
+    <type name="Aregowe\PolyShellProtection\Logger\Logger">
         <arguments>
             <argument name="name" xsi:type="string">polyshell_security</argument>
             <argument name="handlers" xsi:type="array">
-                <item name="main" xsi:type="object">Janderson\PolyShellProtection\Logger\Handler\SecurityHandler</item>
+                <item name="main" xsi:type="object">Aregowe\PolyShellProtection\Logger\Handler\SecurityHandler</item>
             </argument>
         </arguments>
     </type>
 
-    <type name="Janderson\PolyShellProtection\Logger\Handler\SecurityHandler">
+    <type name="Aregowe\PolyShellProtection\Logger\Handler\SecurityHandler">
         <arguments>
             <argument name="filesystem" xsi:type="object">Magento\Framework\Filesystem\Driver\File</argument>
         </arguments>
@@ -26,32 +26,32 @@
 
     <!-- Path Blocking Plugins (Highest Priority) -->
     <type name="Magento\Framework\App\FrontController">
-        <plugin name="janderson_polyshell_block_suspicious_media_paths" type="Janderson\PolyShellProtection\Plugin\BlockSuspiciousMediaPathPlugin" sortOrder="5" />
+        <plugin name="aregowe_polyshell_block_suspicious_media_paths" type="Aregowe\PolyShellProtection\Plugin\BlockSuspiciousMediaPathPlugin" sortOrder="5" />
     </type>
 
     <type name="Magento\MediaStorage\App\Media">
-        <plugin name="janderson_polyshell_block_suspicious_media_paths_in_media_app" type="Janderson\PolyShellProtection\Plugin\BlockSuspiciousMediaAppPathPlugin" sortOrder="5" />
+        <plugin name="aregowe_polyshell_block_suspicious_media_paths_in_media_app" type="Aregowe\PolyShellProtection\Plugin\BlockSuspiciousMediaAppPathPlugin" sortOrder="5" />
     </type>
 
     <!-- Upload Validation Plugins — Catalog Custom Options -->
     <type name="Magento\Catalog\Model\CustomOptions\CustomOptionProcessor">
-        <plugin name="janderson_polyshell_validate_custom_option_upload" type="Janderson\PolyShellProtection\Plugin\ValidateCustomOptionUploadPlugin" sortOrder="10" />
+        <plugin name="aregowe_polyshell_validate_custom_option_upload" type="Aregowe\PolyShellProtection\Plugin\ValidateCustomOptionUploadPlugin" sortOrder="10" />
     </type>
 
     <type name="Magento\Catalog\Model\Webapi\Product\Option\Type\File\Processor">
-        <plugin name="janderson_polyshell_validate_file_content" type="Janderson\PolyShellProtection\Plugin\ValidateUploadedFileContentPlugin" sortOrder="5" />
-        <plugin name="janderson_polyshell_block_executable_filenames" type="Janderson\PolyShellProtection\Plugin\ValidateUploadedFileNamePlugin" sortOrder="10" />
+        <plugin name="aregowe_polyshell_validate_file_content" type="Aregowe\PolyShellProtection\Plugin\ValidateUploadedFileContentPlugin" sortOrder="5" />
+        <plugin name="aregowe_polyshell_block_executable_filenames" type="Aregowe\PolyShellProtection\Plugin\ValidateUploadedFileNamePlugin" sortOrder="10" />
     </type>
 
     <!-- Upload Blocking Plugins — Customer/Address EAV File Attributes -->
     <!-- Blocks at controller level: both Address\File\Upload and Customer\File\Upload extend AbstractUploadFile -->
     <type name="Magento\CustomerCustomAttributes\Controller\AbstractUploadFile">
-        <plugin name="janderson_polyshell_block_customer_attribute_upload_controller" type="Janderson\PolyShellProtection\Plugin\BlockCustomerAttributeFileUploadControllerPlugin" sortOrder="1" />
+        <plugin name="aregowe_polyshell_block_customer_attribute_upload_controller" type="Aregowe\PolyShellProtection\Plugin\BlockCustomerAttributeFileUploadControllerPlugin" sortOrder="1" />
     </type>
 
     <!-- Blocks at FileProcessor level: catches any code path that calls saveTemporaryFile/moveTemporaryFile -->
     <type name="Magento\Customer\Model\FileProcessor">
-        <plugin name="janderson_polyshell_block_customer_file_upload" type="Janderson\PolyShellProtection\Plugin\BlockCustomerFileUploadPlugin" sortOrder="1" />
+        <plugin name="aregowe_polyshell_block_customer_file_upload" type="Aregowe\PolyShellProtection\Plugin\BlockCustomerFileUploadPlugin" sortOrder="1" />
     </type>
 
     <!-- Framework-Level Image Upload Hardening (broadest interception points) -->
@@ -59,10 +59,10 @@
          polyglot scanning, no-extension blocking, double-extension detection, obfuscation checks.
          sortOrder 20 ensures we run AFTER MarkShust's plugins (which have no explicit sortOrder = 10 default). -->
     <type name="Magento\Framework\Api\ImageContentValidator">
-        <plugin name="janderson_polyshell_harden_image_content_validator" type="Janderson\PolyShellProtection\Plugin\HardenImageContentValidatorPlugin" sortOrder="20" />
+        <plugin name="aregowe_polyshell_harden_image_content_validator" type="Aregowe\PolyShellProtection\Plugin\HardenImageContentValidatorPlugin" sortOrder="20" />
     </type>
 
     <type name="Magento\Framework\Api\ImageProcessor">
-        <plugin name="janderson_polyshell_harden_image_processor" type="Janderson\PolyShellProtection\Plugin\HardenImageProcessorPlugin" sortOrder="20" />
+        <plugin name="aregowe_polyshell_harden_image_processor" type="Aregowe\PolyShellProtection\Plugin\HardenImageProcessorPlugin" sortOrder="20" />
     </type>
 </config>

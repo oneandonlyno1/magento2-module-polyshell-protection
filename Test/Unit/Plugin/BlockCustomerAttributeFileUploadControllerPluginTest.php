@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Janderson\PolyShellProtection\Test\Unit\Plugin;
+namespace Aregowe\PolyShellProtection\Test\Unit\Plugin;
 
 use Magento\CustomerCustomAttributes\Controller\AbstractUploadFile;
 use Magento\Framework\Controller\Result\Json as JsonResult;
 use Magento\Framework\Controller\ResultFactory;
 use PHPUnit\Framework\TestCase;
-use Janderson\PolyShellProtection\Logger\Logger;
-use Janderson\PolyShellProtection\Model\SecurityLogSanitizer;
-use Janderson\PolyShellProtection\Plugin\BlockCustomerAttributeFileUploadControllerPlugin;
+use Aregowe\PolyShellProtection\Logger\Logger;
+use Aregowe\PolyShellProtection\Model\SecurityLogSanitizer;
+use Aregowe\PolyShellProtection\Plugin\BlockCustomerAttributeFileUploadControllerPlugin;
 
 class BlockCustomerAttributeFileUploadControllerPluginTest extends TestCase
 {

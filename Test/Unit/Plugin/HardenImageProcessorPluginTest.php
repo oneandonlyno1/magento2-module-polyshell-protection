@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Janderson\PolyShellProtection\Test\Unit\Plugin;
+namespace Aregowe\PolyShellProtection\Test\Unit\Plugin;
 
 use Magento\Framework\Api\Data\ImageContentInterface;
 use Magento\Framework\Api\ImageProcessor;
 use Magento\Framework\Exception\InputException;
 use PHPUnit\Framework\TestCase;
-use Janderson\PolyShellProtection\Logger\Logger;
-use Janderson\PolyShellProtection\Model\PolyglotFileDetector;
-use Janderson\PolyShellProtection\Model\SecurityLogSanitizer;
-use Janderson\PolyShellProtection\Plugin\HardenImageProcessorPlugin;
+use Aregowe\PolyShellProtection\Logger\Logger;
+use Aregowe\PolyShellProtection\Model\PolyglotFileDetector;
+use Aregowe\PolyShellProtection\Model\SecurityLogSanitizer;
+use Aregowe\PolyShellProtection\Plugin\HardenImageProcessorPlugin;
 
 class HardenImageProcessorPluginTest extends TestCase
 {

@@ -1,4 +1,4 @@
-# Janderson_PolyShellProtection
+# Aregowe_PolyShellProtection
 
 ## Purpose
 
@@ -11,8 +11,8 @@ Comprehensive defense-in-depth module that closes the **PolyShell** unrestricted
 ### Via Composer (recommended)
 
 ```bash
-composer require janderson/magento2-module-polyshell-protection
-bin/magento module:enable Janderson_PolyShellProtection
+composer require aregowe/magento2-module-polyshell-protection
+bin/magento module:enable Aregowe_PolyShellProtection
 bin/magento setup:upgrade
 bin/magento cache:flush
 ```
@@ -22,9 +22,9 @@ bin/magento cache:flush
 Copy the module into your project:
 
 ```bash
-mkdir -p app/code/Janderson/PolyShellProtection
-cp -r * app/code/Janderson/PolyShellProtection/
-bin/magento module:enable Janderson_PolyShellProtection
+mkdir -p app/code/Aregowe/PolyShellProtection
+cp -r * app/code/Aregowe/PolyShellProtection/
+bin/magento module:enable Aregowe_PolyShellProtection
 bin/magento setup:upgrade
 bin/magento cache:flush
 ```
@@ -32,9 +32,9 @@ bin/magento cache:flush
 ### Uninstallation
 
 ```bash
-bin/magento module:disable Janderson_PolyShellProtection
+bin/magento module:disable Aregowe_PolyShellProtection
 bin/magento setup:upgrade
-composer remove janderson/magento2-module-polyshell-protection
+composer remove aregowe/magento2-module-polyshell-protection
 bin/magento cache:flush
 ```
 
@@ -119,7 +119,7 @@ This module implements **eight layered Magento plugins** and **three security mo
 ## Module Structure
 
 ```
-app/code/Janderson/PolyShellProtection/
+app/code/Aregowe/PolyShellProtection/
 ├── etc/
 │   ├── module.xml                     # Module declaration
 │   └── di.xml                         # Plugin wiring and DI configuration
@@ -194,7 +194,7 @@ Log context values are sanitized by `SecurityLogSanitizer` to prevent log inject
 
 ```bash
 # From Docker environment
-docker compose exec phpfpm php vendor/bin/phpunit app/code/Janderson/PolyShellProtection/Test/Unit/
+docker compose exec phpfpm php vendor/bin/phpunit app/code/Aregowe/PolyShellProtection/Test/Unit/
 ```
 
 ## Verification After Deployment

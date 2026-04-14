@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Janderson\PolyShellProtection\Plugin;
+namespace Aregowe\PolyShellProtection\Plugin;
 
 use Magento\Catalog\Model\Webapi\Product\Option\Type\File\Processor;
 use Magento\Framework\Api\Data\ImageContentInterface;
 use Magento\Framework\Exception\InputException;
-use Janderson\PolyShellProtection\Model\SecurityLogSanitizer;
-use Janderson\PolyShellProtection\Logger\Logger;
+use Aregowe\PolyShellProtection\Model\SecurityLogSanitizer;
+use Aregowe\PolyShellProtection\Logger\Logger;
 
 /**
  * Kill switch: unconditionally blocks ALL custom option file uploads via the

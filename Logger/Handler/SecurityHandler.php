@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Janderson\PolyShellProtection\Logger\Handler;
+namespace Aregowe\PolyShellProtection\Logger\Handler;
 
 use Magento\Framework\Logger\Handler\Base;
 use Monolog\Logger;

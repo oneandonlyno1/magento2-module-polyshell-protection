@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Janderson\PolyShellProtection\Plugin;
+namespace Aregowe\PolyShellProtection\Plugin;
 
 use Magento\CustomerCustomAttributes\Controller\AbstractUploadFile;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Controller\ResultInterface;
-use Janderson\PolyShellProtection\Model\SecurityLogSanitizer;
-use Janderson\PolyShellProtection\Logger\Logger;
+use Aregowe\PolyShellProtection\Model\SecurityLogSanitizer;
+use Aregowe\PolyShellProtection\Logger\Logger;
 
 /**
  * Blocks the CustomerCustomAttributes file upload controllers entirely.

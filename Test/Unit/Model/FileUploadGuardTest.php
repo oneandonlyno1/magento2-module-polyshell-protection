@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Janderson\PolyShellProtection\Test\Unit\Model;
+namespace Aregowe\PolyShellProtection\Test\Unit\Model;
 
 use Magento\Framework\Exception\InputException;
 use PHPUnit\Framework\TestCase;
-use Janderson\PolyShellProtection\Model\AttackPatternDetector;
-use Janderson\PolyShellProtection\Model\FileUploadGuard;
-use Janderson\PolyShellProtection\Model\PolyglotFileDetector;
+use Aregowe\PolyShellProtection\Model\AttackPatternDetector;
+use Aregowe\PolyShellProtection\Model\FileUploadGuard;
+use Aregowe\PolyShellProtection\Model\PolyglotFileDetector;
 
 class FileUploadGuardTest extends TestCase
 {

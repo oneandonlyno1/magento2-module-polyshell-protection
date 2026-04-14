@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Janderson\PolyShellProtection\Test\Unit\Plugin;
+namespace Aregowe\PolyShellProtection\Test\Unit\Plugin;
 
 use Magento\Catalog\Model\Webapi\Product\Option\Type\File\Processor;
 use Magento\Framework\Api\Data\ImageContentInterface;
 use Magento\Framework\Exception\InputException;
 use PHPUnit\Framework\TestCase;
-use Janderson\PolyShellProtection\Logger\Logger;
-use Janderson\PolyShellProtection\Model\SecurityLogSanitizer;
-use Janderson\PolyShellProtection\Plugin\ValidateUploadedFileNamePlugin;
+use Aregowe\PolyShellProtection\Logger\Logger;
+use Aregowe\PolyShellProtection\Model\SecurityLogSanitizer;
+use Aregowe\PolyShellProtection\Plugin\ValidateUploadedFileNamePlugin;
 
 class ValidateUploadedFileNamePluginTest extends TestCase
 {

@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Janderson\PolyShellProtection\Plugin;
+namespace Aregowe\PolyShellProtection\Plugin;
 
 use Magento\Customer\Model\FileProcessor;
 use Magento\Framework\Exception\LocalizedException;
-use Janderson\PolyShellProtection\Model\SecurityLogSanitizer;
-use Janderson\PolyShellProtection\Logger\Logger;
+use Aregowe\PolyShellProtection\Model\SecurityLogSanitizer;
+use Aregowe\PolyShellProtection\Logger\Logger;
 
 /**
  * Blocks all file uploads processed through Customer FileProcessor
