@@ -6,7 +6,6 @@ namespace Aregowe\PolyShellProtection\Test\Unit;
 
 use Aregowe\PolyShellProtection\Plugin\HardenImageContentValidatorPlugin;
 use Aregowe\PolyShellProtection\Plugin\HardenImageProcessorPlugin;
-use Aregowe\PolyShellProtection\Model\FileUploadGuard;
 use Aregowe\PolyShellProtection\Model\PolyglotFileDetector;
 use Aregowe\PolyShellProtection\Model\SecurityLogSanitizer;
 use Aregowe\PolyShellProtection\Logger\Logger;
@@ -72,7 +71,6 @@ class MimeExtensionInferenceValidationTest extends TestCase
     public function testValidatorPluginExtensionlessWithValidMimePasses(
         string $filename,
         string $mimeType,
-        string $expectedExtension,
         string $expectedRenamedFilename
     ): void {
         $imageContent = $this->createImageContentMock(
@@ -97,7 +95,6 @@ class MimeExtensionInferenceValidationTest extends TestCase
     public function testProcessorPluginExtensionlessWithValidMimePasses(
         string $filename,
         string $mimeType,
-        string $expectedExtension,
         string $expectedRenamedFilename
     ): void {
         $imageContent = $this->createImageContentMock(
@@ -126,37 +123,37 @@ class MimeExtensionInferenceValidationTest extends TestCase
     {
         return [
             'JPEG MIME, numeric filename (issue #1 scenario)' => [
-                '53298390_0', 'image/jpeg', 'jpg', '53298390_0.jpg',
+                '53298390_0', 'image/jpeg', '53298390_0.jpg',
             ],
             'PNG MIME, hash filename' => [
-                'abc123def', 'image/png', 'png', 'abc123def.png',
+                'abc123def', 'image/png', 'abc123def.png',
             ],
             'GIF MIME, simple name' => [
-                'product_image', 'image/gif', 'gif', 'product_image.gif',
+                'product_image', 'image/gif', 'product_image.gif',
             ],
             'WebP MIME' => [
-                'hero_banner', 'image/webp', 'webp', 'hero_banner.webp',
+                'hero_banner', 'image/webp', 'hero_banner.webp',
             ],
             'BMP MIME' => [
-                'legacy_scan', 'image/bmp', 'bmp', 'legacy_scan.bmp',
+                'legacy_scan', 'image/bmp', 'legacy_scan.bmp',
             ],
             'HEIC MIME' => [
-                'iphone_photo', 'image/heic', 'heic', 'iphone_photo.heic',
+                'iphone_photo', 'image/heic', 'iphone_photo.heic',
             ],
             'HEIF MIME maps to heic' => [
-                'iphone_photo2', 'image/heif', 'heic', 'iphone_photo2.heic',
+                'iphone_photo2', 'image/heif', 'iphone_photo2.heic',
             ],
             'x-ms-bmp MIME maps to bmp' => [
-                'old_scan', 'image/x-ms-bmp', 'bmp', 'old_scan.bmp',
+                'old_scan', 'image/x-ms-bmp', 'old_scan.bmp',
             ],
             'MIME with charset parameter stripped' => [
-                'upload_file', 'image/jpeg; charset=utf-8', 'jpg', 'upload_file.jpg',
+                'upload_file', 'image/jpeg; charset=utf-8', 'upload_file.jpg',
             ],
             'MIME with leading/trailing whitespace' => [
-                'trimtest', '  image/png  ', 'png', 'trimtest.png',
+                'trimtest', '  image/png  ', 'trimtest.png',
             ],
             'MIME case insensitive' => [
-                'upper_case', 'IMAGE/JPEG', 'jpg', 'upper_case.jpg',
+                'upper_case', 'IMAGE/JPEG', 'upper_case.jpg',
             ],
         ];
     }
@@ -377,7 +374,9 @@ class MimeExtensionInferenceValidationTest extends TestCase
         $base64 = base64_encode($polyglotContent);
 
         $imageContent = $this->createImageContentMock('53298390_0', 'image/jpeg', $base64);
-        $imageContent->method('setName')->with('53298390_0.jpg');
+        $imageContent->expects($this->once())
+            ->method('setName')
+            ->with('53298390_0.jpg');
 
         $this->expectException(InputException::class);
         $this->expectExceptionMessage('executable code');
@@ -393,7 +392,9 @@ class MimeExtensionInferenceValidationTest extends TestCase
         $base64 = base64_encode($polyglotContent);
 
         $imageContent = $this->createImageContentMock('53298390_0', 'image/jpeg', $base64);
-        $imageContent->method('setName')->with('53298390_0.jpg');
+        $imageContent->expects($this->once())
+            ->method('setName')
+            ->with('53298390_0.jpg');
 
         $this->expectException(InputException::class);
         $this->expectExceptionMessage('executable code');
@@ -530,7 +531,9 @@ class MimeExtensionInferenceValidationTest extends TestCase
         $base64 = base64_encode($polyglotContent);
 
         $imageContent = $this->createImageContentMock('53298390_0', 'image/jpeg', $base64);
-        $imageContent->method('setName')->with('53298390_0.jpg');
+        $imageContent->expects($this->once())
+            ->method('setName')
+            ->with('53298390_0.jpg');
 
         $this->expectException(InputException::class);
         $this->expectExceptionMessage('executable code');
@@ -545,7 +548,9 @@ class MimeExtensionInferenceValidationTest extends TestCase
         $base64 = base64_encode($polyglotContent);
 
         $imageContent = $this->createImageContentMock('erp_sync', 'image/gif', $base64);
-        $imageContent->method('setName')->with('erp_sync.gif');
+        $imageContent->expects($this->once())
+            ->method('setName')
+            ->with('erp_sync.gif');
 
         $this->expectException(InputException::class);
         $this->expectExceptionMessage('executable code');
@@ -561,7 +566,9 @@ class MimeExtensionInferenceValidationTest extends TestCase
         $base64 = base64_encode($polyglotContent);
 
         $imageContent = $this->createImageContentMock('banner', 'image/png', $base64);
-        $imageContent->method('setName')->with('banner.png');
+        $imageContent->expects($this->once())
+            ->method('setName')
+            ->with('banner.png');
 
         $this->expectException(InputException::class);
         $this->expectExceptionMessage('executable code');

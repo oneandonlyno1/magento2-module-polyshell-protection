@@ -34,23 +34,6 @@ use Aregowe\PolyShellProtection\Logger\Logger;
  */
 class HardenImageContentValidatorPlugin
 {
-    /**
-     * MIME type to extension mapping for extension-less REST payloads.
-     *
-     * @var array<string, string>
-     */
-    private const MIME_EXTENSION_MAP = [
-        'image/bmp' => 'bmp',
-        'image/gif' => 'gif',
-        'image/heic' => 'heic',
-        'image/heif' => 'heic',
-        'image/jpeg' => 'jpg',
-        'image/jpg' => 'jpg',
-        'image/png' => 'png',
-        'image/webp' => 'webp',
-        'image/x-ms-bmp' => 'bmp',
-    ];
-
     private PolyglotFileDetector $polyglotDetector;
 
     private Logger $logger;
@@ -87,6 +70,10 @@ class HardenImageContentValidatorPlugin
         bool $result,
         ImageContentInterface $imageContent
     ): bool {
+        if (!$result) {
+            return $result;
+        }
+
         $fileName = $imageContent->getName();
         $mimeType = $imageContent->getType();
 
@@ -106,7 +93,13 @@ class HardenImageContentValidatorPlugin
                 throw new InputException(__('Image file must include a valid file extension.'));
             }
 
-            $fileName .= '.' . $inferredExtension;
+            $normalizedFileName = rtrim($fileName, " \t\n\r\0\x0B.");
+            if ($normalizedFileName === '') {
+                $this->logBlock('empty filename', '');
+                throw new InputException(__('Image file name is required.'));
+            }
+
+            $fileName = $normalizedFileName . '.' . $inferredExtension;
             $imageContent->setName($fileName);
             $extension = $inferredExtension;
         }
@@ -152,7 +145,7 @@ class HardenImageContentValidatorPlugin
 
         $normalized = strtolower(trim(explode(';', $mimeType)[0]));
 
-        return self::MIME_EXTENSION_MAP[$normalized] ?? null;
+        return FileUploadGuard::MIME_EXTENSION_MAP[$normalized] ?? null;
     }
 
     private function logBlock(string $reason, string $fileName): void

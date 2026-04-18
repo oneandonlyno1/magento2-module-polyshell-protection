@@ -34,6 +34,25 @@ class FileUploadGuard
     public const ALLOWED_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'gif', 'png', 'webp', 'bmp', 'heic'];
 
     /**
+     * MIME type to extension mapping for extension-less REST payloads.
+     * Used by both HardenImageContentValidatorPlugin and HardenImageProcessorPlugin
+     * to infer a file extension when none is provided.
+     *
+     * @var array<string, string>
+     */
+    public const MIME_EXTENSION_MAP = [
+        'image/bmp' => 'bmp',
+        'image/gif' => 'gif',
+        'image/heic' => 'heic',
+        'image/heif' => 'heic',
+        'image/jpeg' => 'jpg',
+        'image/jpg' => 'jpg',
+        'image/png' => 'png',
+        'image/webp' => 'webp',
+        'image/x-ms-bmp' => 'bmp',
+    ];
+
+    /**
      * Uploads should be explicit, non-executable customer file types.
      *
      * @var array<string, bool>
