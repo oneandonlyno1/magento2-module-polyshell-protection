@@ -29,7 +29,15 @@ class HardenImageContentValidatorPluginTest extends TestCase
         $this->polyglotDetector = $this->createMock(PolyglotFileDetector::class);
         $this->logger = $this->getMockBuilder(Logger::class)->disableOriginalConstructor()->getMock();
         $fileUploadGuard = $this->createMock(FileUploadGuard::class);
-        $fileUploadGuard->method('normalizeFileName')->willReturnArgument(0);
+        $fileUploadGuard->method('inferExtensionForFileName')->willReturnCallback(
+            static function (string $fileName, ?string $mimeType): ?array {
+                $ext = FileUploadGuard::inferExtensionFromMimeType($mimeType);
+                if ($ext === null) {
+                    return null;
+                }
+                return [rtrim($fileName, " \t\n\r\0\x0B.") . '.' . $ext, $ext];
+            }
+        );
         $sanitizer = new SecurityLogSanitizer();
 
         $this->plugin = new HardenImageContentValidatorPlugin(

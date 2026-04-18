@@ -103,6 +103,36 @@ class FileUploadGuard
     ];
 
     /**
+     * Infer and validate a file extension for extension-less filenames.
+     *
+     * Performs MIME-based extension inference, safety validation, and filename
+     * normalization in a single call. Both image-hardening plugins delegate here
+     * to avoid duplicating this security-critical logic.
+     *
+     * @param string $fileName Raw filename (must be non-empty).
+     * @param ?string $mimeType Claimed MIME type from client input.
+     * @return array{0: string, 1: string}|null [normalizedFileName, extension],
+     *     or null if the MIME type cannot be mapped to an allowed extension.
+     * @throws InputException If the inferred filename fails safety validation.
+     */
+    public function inferExtensionForFileName(string $fileName, ?string $mimeType): ?array
+    {
+        $inferredExtension = self::inferExtensionFromMimeType($mimeType);
+        if ($inferredExtension === null) {
+            return null;
+        }
+
+        $trimmedFileName = rtrim($fileName, " \t\n\r\0\x0B.");
+        $inferredFileName = $trimmedFileName . '.' . $inferredExtension;
+
+        $this->assertSafeFileName($inferredFileName);
+
+        $normalizedFileName = $this->normalizeFileName($inferredFileName);
+
+        return [$normalizedFileName, $inferredExtension];
+    }
+
+    /**
      * @param string|null $fileName
      * @throws InputException
      */

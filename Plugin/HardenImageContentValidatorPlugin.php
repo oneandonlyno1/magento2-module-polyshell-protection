@@ -91,27 +91,14 @@ class HardenImageContentValidatorPlugin
 
         // For extension-less REST payloads, infer extension from claimed MIME type.
         if ($extension === '') {
-            $inferredExtension = FileUploadGuard::inferExtensionFromMimeType($mimeType);
-            if ($inferredExtension === null) {
+            $result = $this->fileUploadGuard->inferExtensionForFileName($fileName, $mimeType);
+            if ($result === null) {
                 $this->logBlock('no extension', $fileName);
                 throw new InputException(__('Image file must include a valid file extension.'));
             }
 
-            $trimmedFileName = rtrim($fileName, " \t\n\r\0\x0B.");
-            $inferredFileName = $trimmedFileName . '.' . $inferredExtension;
-
-            try {
-                $this->fileUploadGuard->assertSafeFileName($inferredFileName);
-            } catch (InputException $e) {
-                $this->logBlock('unsafe inferred filename', $fileName);
-                throw $e;
-            }
-
-            // Use the canonical normalized form so control characters don't
-            // survive into the persisted filename.
-            $fileName = $this->fileUploadGuard->normalizeFileName($inferredFileName);
+            [$fileName, $extension] = $result;
             $imageContent->setName($fileName);
-            $extension = $inferredExtension;
         }
 
         // Strict image-only allowlist

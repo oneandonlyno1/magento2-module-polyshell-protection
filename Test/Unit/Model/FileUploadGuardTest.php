@@ -108,4 +108,39 @@ class FileUploadGuardTest extends TestCase
             'application/pdf' => ['application/pdf'],
         ];
     }
+
+    public function testInferExtensionForFileNameReturnsNormalizedResult(): void
+    {
+        $result = $this->guard->inferExtensionForFileName('53298390_0', 'image/jpeg');
+
+        $this->assertSame(['53298390_0.jpg', 'jpg'], $result);
+    }
+
+    public function testInferExtensionForFileNameReturnsNullForUnknownMime(): void
+    {
+        $result = $this->guard->inferExtensionForFileName('somefile', 'application/pdf');
+
+        $this->assertNull($result);
+    }
+
+    public function testInferExtensionForFileNameReturnsNullForNullMime(): void
+    {
+        $result = $this->guard->inferExtensionForFileName('somefile', null);
+
+        $this->assertNull($result);
+    }
+
+    public function testInferExtensionForFileNameTrimsTrailingDots(): void
+    {
+        $result = $this->guard->inferExtensionForFileName('photo...', 'image/png');
+
+        $this->assertSame(['photo.png', 'png'], $result);
+    }
+
+    public function testInferExtensionForFileNameThrowsOnUnsafeName(): void
+    {
+        $this->expectException(InputException::class);
+
+        $this->guard->inferExtensionForFileName('shell.php', 'image/jpeg');
+    }
 }
