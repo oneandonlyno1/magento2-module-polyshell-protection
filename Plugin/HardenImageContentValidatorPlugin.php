@@ -34,6 +34,8 @@ use Aregowe\PolyShellProtection\Logger\Logger;
  */
 class HardenImageContentValidatorPlugin
 {
+    private FileUploadGuard $fileUploadGuard;
+
     private PolyglotFileDetector $polyglotDetector;
 
     private Logger $logger;
@@ -41,10 +43,12 @@ class HardenImageContentValidatorPlugin
     private SecurityLogSanitizer $logSanitizer;
 
     public function __construct(
+        FileUploadGuard $fileUploadGuard,
         PolyglotFileDetector $polyglotDetector,
         Logger $logger,
         SecurityLogSanitizer $logSanitizer
     ) {
+        $this->fileUploadGuard = $fileUploadGuard;
         $this->polyglotDetector = $polyglotDetector;
         $this->logger = $logger;
         $this->logSanitizer = $logSanitizer;
@@ -70,6 +74,10 @@ class HardenImageContentValidatorPlugin
         bool $result,
         ImageContentInterface $imageContent
     ): bool {
+        if (!$result) {
+            return $result;
+        }
+
         $fileName = $imageContent->getName();
 
         // Block empty/null filenames
@@ -80,10 +88,17 @@ class HardenImageContentValidatorPlugin
 
         $extension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
 
-        // Block files with no extension
+        // For extension-less REST payloads, infer extension from claimed MIME type.
         if ($extension === '') {
-            $this->logBlock('no extension', $fileName);
-            throw new InputException(__('Image file must include a valid file extension.'));
+            $mimeType = $imageContent->getType();
+            $inferenceResult = $this->fileUploadGuard->inferExtensionForFileName($fileName, $mimeType);
+            if ($inferenceResult === null) {
+                $this->logBlock('no extension', $fileName);
+                throw new InputException(__('Image file must include a valid file extension.'));
+            }
+
+            [$fileName, $extension] = $inferenceResult;
+            $imageContent->setName($fileName);
         }
 
         // Strict image-only allowlist

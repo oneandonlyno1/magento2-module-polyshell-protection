@@ -9,6 +9,7 @@ use Magento\Framework\Api\ImageProcessor;
 use Magento\Framework\Exception\InputException;
 use PHPUnit\Framework\TestCase;
 use Aregowe\PolyShellProtection\Logger\Logger;
+use Aregowe\PolyShellProtection\Model\FileUploadGuard;
 use Aregowe\PolyShellProtection\Model\PolyglotFileDetector;
 use Aregowe\PolyShellProtection\Model\SecurityLogSanitizer;
 use Aregowe\PolyShellProtection\Plugin\HardenImageProcessorPlugin;
@@ -27,9 +28,20 @@ class HardenImageProcessorPluginTest extends TestCase
     {
         $this->polyglotDetector = $this->createMock(PolyglotFileDetector::class);
         $this->logger = $this->getMockBuilder(Logger::class)->disableOriginalConstructor()->getMock();
+        $fileUploadGuard = $this->createMock(FileUploadGuard::class);
+        $fileUploadGuard->method('inferExtensionForFileName')->willReturnCallback(
+            static function (string $fileName, ?string $mimeType): ?array {
+                $ext = FileUploadGuard::inferExtensionFromMimeType($mimeType);
+                if ($ext === null) {
+                    return null;
+                }
+                return [rtrim($fileName, " \t\n\r\0\x0B.") . '.' . $ext, $ext];
+            }
+        );
         $sanitizer = new SecurityLogSanitizer();
 
         $this->plugin = new HardenImageProcessorPlugin(
+            $fileUploadGuard,
             $this->polyglotDetector,
             $this->logger,
             $sanitizer
@@ -153,6 +165,7 @@ class HardenImageProcessorPluginTest extends TestCase
     {
         $imageContent = $this->createMock(ImageContentInterface::class);
         $imageContent->method('getName')->willReturn('noext');
+        $imageContent->method('getType')->willReturn(null);
 
         $this->logger->expects($this->once())->method('warning');
         $this->expectException(InputException::class);
@@ -163,6 +176,24 @@ class HardenImageProcessorPluginTest extends TestCase
             'catalog',
             $imageContent
         );
+    }
+
+    public function testNoExtensionWithJpegMimePasses(): void
+    {
+        $imageContent = $this->createMock(ImageContentInterface::class);
+        $imageContent->method('getName')->willReturn('53298390_0');
+        $imageContent->method('getType')->willReturn('image/jpeg');
+        $imageContent->method('getBase64EncodedData')->willReturn(base64_encode('safe data'));
+        $imageContent->expects($this->once())
+            ->method('setName')
+            ->with('53298390_0.jpg')
+            ->willReturnSelf();
+
+        $subject = $this->createMock(ImageProcessor::class);
+
+        $result = $this->plugin->beforeProcessImageContent($subject, 'tmp/catalog/product', $imageContent);
+
+        $this->assertSame(['tmp/catalog/product', $imageContent], $result);
     }
 
     public function testNonImageExtensionBlocked(): void

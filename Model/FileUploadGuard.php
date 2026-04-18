@@ -34,6 +34,48 @@ class FileUploadGuard
     public const ALLOWED_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'gif', 'png', 'webp', 'bmp', 'heic'];
 
     /**
+     * MIME type to extension mapping for extension-less REST payloads.
+     * Used by both HardenImageContentValidatorPlugin and HardenImageProcessorPlugin
+     * to infer a file extension when none is provided.
+     *
+     * @var array<string, string>
+     */
+    public const MIME_EXTENSION_MAP = [
+        'image/bmp' => 'bmp',
+        'image/gif' => 'gif',
+        'image/heic' => 'heic',
+        'image/heif' => 'heic',
+        'image/jpeg' => 'jpg',
+        'image/jpg' => 'jpg',
+        'image/png' => 'png',
+        'image/webp' => 'webp',
+        'image/x-ms-bmp' => 'bmp',
+    ];
+
+    /**
+     * Infer a file extension from a claimed/provided MIME type.
+     *
+     * This MIME type may originate from client-controlled input and must not be
+     * treated as authoritative. It is used only as a hint for extension-less
+     * payloads and is constrained by the strict allowlist in MIME_EXTENSION_MAP.
+     *
+     * Normalizes the MIME type (lowercase, trim, strip parameters like charset)
+     * and looks it up in MIME_EXTENSION_MAP. Returns null if the MIME type is
+     * empty, null, or not in the allowlist. Prefer using this only alongside
+     * stronger validation rather than as a substitute for content-based checks.
+     */
+    public static function inferExtensionFromMimeType(?string $mimeType): ?string
+    {
+        if ($mimeType === null || trim($mimeType) === '') {
+            return null;
+        }
+
+        $normalized = strtolower(trim(explode(';', $mimeType)[0]));
+
+        return self::MIME_EXTENSION_MAP[$normalized] ?? null;
+    }
+
+    /**
      * Uploads should be explicit, non-executable customer file types.
      *
      * @var array<string, bool>
@@ -59,6 +101,36 @@ class FileUploadGuard
         'xlsx' => true,
         'zip' => true,
     ];
+
+    /**
+     * Infer and validate a file extension for extension-less filenames.
+     *
+     * Performs MIME-based extension inference, safety validation, and filename
+     * normalization in a single call. Both image-hardening plugins delegate here
+     * to avoid duplicating this security-critical logic.
+     *
+     * @param string $fileName Raw filename (must be non-empty).
+     * @param ?string $mimeType Claimed MIME type from client input.
+     * @return array{0: string, 1: string}|null [normalizedFileName, extension],
+     *     or null if the MIME type cannot be mapped to an allowed extension.
+     * @throws InputException If the inferred filename fails safety validation.
+     */
+    public function inferExtensionForFileName(string $fileName, ?string $mimeType): ?array
+    {
+        $inferredExtension = self::inferExtensionFromMimeType($mimeType);
+        if ($inferredExtension === null) {
+            return null;
+        }
+
+        $trimmedFileName = rtrim($fileName, " \t\n\r\0\x0B.");
+        $inferredFileName = $trimmedFileName . '.' . $inferredExtension;
+
+        $this->assertSafeFileName($inferredFileName);
+
+        $normalizedFileName = $this->normalizeFileName($inferredFileName);
+
+        return [$normalizedFileName, $inferredExtension];
+    }
 
     /**
      * @param string|null $fileName
@@ -106,7 +178,15 @@ class FileUploadGuard
     }
 
     /**
-     * Decode escaped unicode sequences often used in obfuscated filenames.
+     * Normalize a filename by decoding unicode/URL escapes, replacing CR/LF/TAB
+     * characters with spaces, collapsing whitespace and dots, lowercasing, and
+     * trimming leading/trailing whitespace, selected control characters removed
+     * by trimming, and trailing dots/spaces. Any remaining invalid control
+     * characters are rejected later by assertSafeFileName().
+     *
+     * This method does not enforce safety on its own — callers must always use
+     * assertSafeFileName() or inferExtensionForFileName() to get a validated
+     * result. Kept private to prevent misuse without validation.
      *
      * @param string|null $fileName
      * @return string

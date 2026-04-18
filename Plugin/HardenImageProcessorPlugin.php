@@ -33,6 +33,8 @@ class HardenImageProcessorPlugin
 {
     private static ?\ReflectionProperty $uploaderProperty = null;
 
+    private FileUploadGuard $fileUploadGuard;
+
     private PolyglotFileDetector $polyglotDetector;
 
     private Logger $logger;
@@ -40,10 +42,12 @@ class HardenImageProcessorPlugin
     private SecurityLogSanitizer $logSanitizer;
 
     public function __construct(
+        FileUploadGuard $fileUploadGuard,
         PolyglotFileDetector $polyglotDetector,
         Logger $logger,
         SecurityLogSanitizer $logSanitizer
     ) {
+        $this->fileUploadGuard = $fileUploadGuard;
         $this->polyglotDetector = $polyglotDetector;
         $this->logger = $logger;
         $this->logSanitizer = $logSanitizer;
@@ -79,10 +83,17 @@ class HardenImageProcessorPlugin
 
         $extension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
 
-        // Block files with no extension
+        // For extension-less REST payloads, infer extension from claimed MIME type.
         if ($extension === '') {
-            $this->logBlock('no extension', $fileName, $entityType);
-            throw new InputException(__('Image file must include a valid file extension.'));
+            $mimeType = $imageContent->getType();
+            $inferenceResult = $this->fileUploadGuard->inferExtensionForFileName($fileName, $mimeType);
+            if ($inferenceResult === null) {
+                $this->logBlock('no extension', $fileName, $entityType);
+                throw new InputException(__('Image file must include a valid file extension.'));
+            }
+
+            [$fileName, $extension] = $inferenceResult;
+            $imageContent->setName($fileName);
         }
 
         // Block non-image extensions
