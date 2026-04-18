@@ -29,6 +29,7 @@ class HardenImageContentValidatorPluginTest extends TestCase
         $this->polyglotDetector = $this->createMock(PolyglotFileDetector::class);
         $this->logger = $this->getMockBuilder(Logger::class)->disableOriginalConstructor()->getMock();
         $fileUploadGuard = $this->createMock(FileUploadGuard::class);
+        $fileUploadGuard->method('normalizeFileName')->willReturnArgument(0);
         $sanitizer = new SecurityLogSanitizer();
 
         $this->plugin = new HardenImageContentValidatorPlugin(

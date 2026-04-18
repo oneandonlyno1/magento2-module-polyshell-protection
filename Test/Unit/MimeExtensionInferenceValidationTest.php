@@ -710,9 +710,9 @@ class MimeExtensionInferenceValidationTest extends TestCase
     public static function normalizedControlCharFilenameProvider(): array
     {
         return [
-            'tab character normalized to space' => ["image\tname", "image\tname.jpg"],
-            'newline normalized to space' => ["image\nname", "image\nname.jpg"],
-            'carriage return normalized to space' => ["image\rname", "image\rname.jpg"],
+            'tab character normalized to space' => ["image\tname", "image name.jpg"],
+            'newline normalized to space' => ["image\nname", "image name.jpg"],
+            'carriage return normalized to space' => ["image\rname", "image name.jpg"],
         ];
     }
 

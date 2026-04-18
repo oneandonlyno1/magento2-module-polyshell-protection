@@ -107,7 +107,9 @@ class HardenImageContentValidatorPlugin
                 throw $e;
             }
 
-            $fileName = $inferredFileName;
+            // Use the canonical normalized form so control characters don't
+            // survive into the persisted filename.
+            $fileName = $this->fileUploadGuard->normalizeFileName($inferredFileName);
             $imageContent->setName($fileName);
             $extension = $inferredExtension;
         }
