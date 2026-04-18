@@ -153,6 +153,7 @@ class HardenImageProcessorPluginTest extends TestCase
     {
         $imageContent = $this->createMock(ImageContentInterface::class);
         $imageContent->method('getName')->willReturn('noext');
+        $imageContent->method('getType')->willReturn(null);
 
         $this->logger->expects($this->once())->method('warning');
         $this->expectException(InputException::class);
@@ -163,6 +164,24 @@ class HardenImageProcessorPluginTest extends TestCase
             'catalog',
             $imageContent
         );
+    }
+
+    public function testNoExtensionWithJpegMimePasses(): void
+    {
+        $imageContent = $this->createMock(ImageContentInterface::class);
+        $imageContent->method('getName')->willReturn('53298390_0');
+        $imageContent->method('getType')->willReturn('image/jpeg');
+        $imageContent->method('getBase64EncodedData')->willReturn(base64_encode('safe data'));
+        $imageContent->expects($this->once())
+            ->method('setName')
+            ->with('53298390_0.jpg')
+            ->willReturnSelf();
+
+        $subject = $this->createMock(ImageProcessor::class);
+
+        $result = $this->plugin->beforeProcessImageContent($subject, 'tmp/catalog/product', $imageContent);
+
+        $this->assertSame(['tmp/catalog/product', $imageContent], $result);
     }
 
     public function testNonImageExtensionBlocked(): void

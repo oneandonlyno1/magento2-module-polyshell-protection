@@ -33,6 +33,23 @@ class HardenImageProcessorPlugin
 {
     private static ?\ReflectionProperty $uploaderProperty = null;
 
+    /**
+     * MIME type to extension mapping for extension-less REST payloads.
+     *
+     * @var array<string, string>
+     */
+    private const MIME_EXTENSION_MAP = [
+        'image/bmp' => 'bmp',
+        'image/gif' => 'gif',
+        'image/heic' => 'heic',
+        'image/heif' => 'heic',
+        'image/jpeg' => 'jpg',
+        'image/jpg' => 'jpg',
+        'image/png' => 'png',
+        'image/webp' => 'webp',
+        'image/x-ms-bmp' => 'bmp',
+    ];
+
     private PolyglotFileDetector $polyglotDetector;
 
     private Logger $logger;
@@ -70,6 +87,7 @@ class HardenImageProcessorPlugin
         $this->lockSubjectUploaderExtensions($subject);
 
         $fileName = $imageContent->getName();
+        $mimeType = $imageContent->getType();
 
         // Block empty filenames
         if ($fileName === null || trim($fileName) === '') {
@@ -79,10 +97,17 @@ class HardenImageProcessorPlugin
 
         $extension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
 
-        // Block files with no extension
+        // For extension-less REST payloads, infer extension from trusted MIME type.
         if ($extension === '') {
-            $this->logBlock('no extension', $fileName, $entityType);
-            throw new InputException(__('Image file must include a valid file extension.'));
+            $inferredExtension = $this->inferExtensionFromMimeType($mimeType);
+            if ($inferredExtension === null) {
+                $this->logBlock('no extension', $fileName, $entityType);
+                throw new InputException(__('Image file must include a valid file extension.'));
+            }
+
+            $fileName .= '.' . $inferredExtension;
+            $imageContent->setName($fileName);
+            $extension = $inferredExtension;
         }
 
         // Block non-image extensions
@@ -111,6 +136,17 @@ class HardenImageProcessorPlugin
         }
 
         return [$entityType, $imageContent];
+    }
+
+    private function inferExtensionFromMimeType(?string $mimeType): ?string
+    {
+        if ($mimeType === null || trim($mimeType) === '') {
+            return null;
+        }
+
+        $normalized = strtolower(trim(explode(';', $mimeType)[0]));
+
+        return self::MIME_EXTENSION_MAP[$normalized] ?? null;
     }
 
     private function logBlock(string $reason, string $fileName, mixed $entityType): void
