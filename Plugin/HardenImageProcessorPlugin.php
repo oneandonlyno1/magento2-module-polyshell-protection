@@ -86,13 +86,13 @@ class HardenImageProcessorPlugin
         // For extension-less REST payloads, infer extension from claimed MIME type.
         if ($extension === '') {
             $mimeType = $imageContent->getType();
-            $result = $this->fileUploadGuard->inferExtensionForFileName($fileName, $mimeType);
-            if ($result === null) {
+            $inferenceResult = $this->fileUploadGuard->inferExtensionForFileName($fileName, $mimeType);
+            if ($inferenceResult === null) {
                 $this->logBlock('no extension', $fileName, $entityType);
                 throw new InputException(__('Image file must include a valid file extension.'));
             }
 
-            [$fileName, $extension] = $result;
+            [$fileName, $extension] = $inferenceResult;
             $imageContent->setName($fileName);
         }
 
