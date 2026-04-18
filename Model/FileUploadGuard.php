@@ -180,8 +180,9 @@ class FileUploadGuard
     /**
      * Normalize a filename by decoding unicode/URL escapes, replacing CR/LF/TAB
      * characters with spaces, collapsing whitespace and dots, lowercasing, and
-     * trimming trailing dots/spaces. Other control characters are preserved here
-     * and are rejected later by assertSafeFileName().
+     * trimming leading/trailing whitespace, selected control characters removed
+     * by trimming, and trailing dots/spaces. Any remaining invalid control
+     * characters are rejected later by assertSafeFileName().
      *
      * This method does not enforce safety on its own — callers must always use
      * assertSafeFileName() or inferExtensionForFileName() to get a validated

