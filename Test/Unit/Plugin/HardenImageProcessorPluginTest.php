@@ -9,6 +9,7 @@ use Magento\Framework\Api\ImageProcessor;
 use Magento\Framework\Exception\InputException;
 use PHPUnit\Framework\TestCase;
 use Aregowe\PolyShellProtection\Logger\Logger;
+use Aregowe\PolyShellProtection\Model\FileUploadGuard;
 use Aregowe\PolyShellProtection\Model\PolyglotFileDetector;
 use Aregowe\PolyShellProtection\Model\SecurityLogSanitizer;
 use Aregowe\PolyShellProtection\Plugin\HardenImageProcessorPlugin;
@@ -27,9 +28,11 @@ class HardenImageProcessorPluginTest extends TestCase
     {
         $this->polyglotDetector = $this->createMock(PolyglotFileDetector::class);
         $this->logger = $this->getMockBuilder(Logger::class)->disableOriginalConstructor()->getMock();
+        $fileUploadGuard = $this->createMock(FileUploadGuard::class);
         $sanitizer = new SecurityLogSanitizer();
 
         $this->plugin = new HardenImageProcessorPlugin(
+            $fileUploadGuard,
             $this->polyglotDetector,
             $this->logger,
             $sanitizer

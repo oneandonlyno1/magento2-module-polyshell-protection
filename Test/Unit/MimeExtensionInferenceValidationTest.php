@@ -6,6 +6,8 @@ namespace Aregowe\PolyShellProtection\Test\Unit;
 
 use Aregowe\PolyShellProtection\Plugin\HardenImageContentValidatorPlugin;
 use Aregowe\PolyShellProtection\Plugin\HardenImageProcessorPlugin;
+use Aregowe\PolyShellProtection\Model\AttackPatternDetector;
+use Aregowe\PolyShellProtection\Model\FileUploadGuard;
 use Aregowe\PolyShellProtection\Model\PolyglotFileDetector;
 use Aregowe\PolyShellProtection\Model\SecurityLogSanitizer;
 use Aregowe\PolyShellProtection\Logger\Logger;
@@ -38,7 +40,8 @@ class MimeExtensionInferenceValidationTest extends TestCase
 {
     private HardenImageContentValidatorPlugin $validatorPlugin;
     private HardenImageProcessorPlugin $processorPlugin;
-    private MockObject|Logger $loggerMock;
+    /** @var Logger|MockObject */
+    private Logger $loggerMock;
     private PolyglotFileDetector $polyglotDetector;
     private SecurityLogSanitizer $logSanitizer;
 
@@ -48,13 +51,20 @@ class MimeExtensionInferenceValidationTest extends TestCase
         $this->polyglotDetector = new PolyglotFileDetector();
         $this->logSanitizer = new SecurityLogSanitizer();
 
+        $fileUploadGuard = new FileUploadGuard(
+            new PolyglotFileDetector(),
+            new AttackPatternDetector()
+        );
+
         $this->validatorPlugin = new HardenImageContentValidatorPlugin(
+            $fileUploadGuard,
             $this->polyglotDetector,
             $this->loggerMock,
             $this->logSanitizer
         );
 
         $this->processorPlugin = new HardenImageProcessorPlugin(
+            $fileUploadGuard,
             $this->polyglotDetector,
             $this->loggerMock,
             $this->logSanitizer
@@ -578,13 +588,16 @@ class MimeExtensionInferenceValidationTest extends TestCase
     }
 
     // ========================================================================
-    // Security — Path separator / control character rejection (extension-less)
+    // Security — Unsafe inferred filename rejection (extension-less)
     // ========================================================================
 
     /**
-     * @dataProvider pathSeparatorFilenameProvider
+     * Extension-less filenames with path separators or non-normalizable control
+     * characters are blocked by FileUploadGuard::assertSafeFileName().
+     *
+     * @dataProvider unsafeInferredFilenameProvider
      */
-    public function testValidatorPluginExtensionlessWithPathSeparatorBlocked(
+    public function testValidatorPluginExtensionlessWithUnsafeFilenameBlocked(
         string $filename
     ): void {
         $imageContent = $this->createImageContentMock(
@@ -596,16 +609,15 @@ class MimeExtensionInferenceValidationTest extends TestCase
         $imageContent->expects($this->never())->method('setName');
 
         $this->expectException(InputException::class);
-        $this->expectExceptionMessage('invalid characters');
 
         $subject = $this->createMock(ImageContentValidator::class);
         $this->validatorPlugin->afterIsValid($subject, true, $imageContent);
     }
 
     /**
-     * @dataProvider pathSeparatorFilenameProvider
+     * @dataProvider unsafeInferredFilenameProvider
      */
-    public function testProcessorPluginExtensionlessWithPathSeparatorBlocked(
+    public function testProcessorPluginExtensionlessWithUnsafeFilenameBlocked(
         string $filename
     ): void {
         $imageContent = $this->createImageContentMock(
@@ -617,7 +629,6 @@ class MimeExtensionInferenceValidationTest extends TestCase
         $imageContent->expects($this->never())->method('setName');
 
         $this->expectException(InputException::class);
-        $this->expectExceptionMessage('invalid characters');
 
         $subject = $this->createMock(ImageProcessor::class);
         $this->processorPlugin->beforeProcessImageContent(
@@ -627,7 +638,7 @@ class MimeExtensionInferenceValidationTest extends TestCase
         );
     }
 
-    public static function pathSeparatorFilenameProvider(): array
+    public static function unsafeInferredFilenameProvider(): array
     {
         return [
             'forward slash traversal' => ['../../../etc/passwd'],
@@ -635,11 +646,73 @@ class MimeExtensionInferenceValidationTest extends TestCase
             'embedded forward slash' => ['path/to/shell'],
             'embedded backslash' => ['path\\to\\shell'],
             'null byte injection' => ["image\x00php"],
-            'tab control character' => ["image\tname"],
-            'newline control character' => ["image\nname"],
-            'carriage return' => ["image\rname"],
             'escape character' => ["image\x1Bname"],
             'DEL character' => ["image\x7Fname"],
+        ];
+    }
+
+    /**
+     * Extension-less filenames with whitespace control characters (tab, newline,
+     * carriage return) are normalized to spaces by FileUploadGuard's filename
+     * normalization pipeline and pass validation. The file is renamed with the
+     * inferred extension.
+     *
+     * @dataProvider normalizedControlCharFilenameProvider
+     */
+    public function testValidatorPluginExtensionlessWithNormalizedControlCharPasses(
+        string $filename,
+        string $expectedRenamedFilename
+    ): void {
+        $imageContent = $this->createImageContentMock(
+            $filename,
+            'image/jpeg',
+            $this->getCleanJpegBase64()
+        );
+
+        $imageContent->expects($this->once())
+            ->method('setName')
+            ->with($expectedRenamedFilename);
+
+        $subject = $this->createMock(ImageContentValidator::class);
+        $result = $this->validatorPlugin->afterIsValid($subject, true, $imageContent);
+        $this->assertTrue($result);
+    }
+
+    /**
+     * @dataProvider normalizedControlCharFilenameProvider
+     */
+    public function testProcessorPluginExtensionlessWithNormalizedControlCharPasses(
+        string $filename,
+        string $expectedRenamedFilename
+    ): void {
+        $imageContent = $this->createImageContentMock(
+            $filename,
+            'image/jpeg',
+            $this->getCleanJpegBase64()
+        );
+
+        $imageContent->expects($this->once())
+            ->method('setName')
+            ->with($expectedRenamedFilename);
+
+        $subject = $this->createMock(ImageProcessor::class);
+
+        [$entityType, $returnedContent] = $this->processorPlugin->beforeProcessImageContent(
+            $subject,
+            'tmp/catalog/product',
+            $imageContent
+        );
+
+        $this->assertSame('tmp/catalog/product', $entityType);
+        $this->assertSame($imageContent, $returnedContent);
+    }
+
+    public static function normalizedControlCharFilenameProvider(): array
+    {
+        return [
+            'tab character normalized to space' => ["image\tname", "image\tname.jpg"],
+            'newline normalized to space' => ["image\nname", "image\nname.jpg"],
+            'carriage return normalized to space' => ["image\rname", "image\rname.jpg"],
         ];
     }
 

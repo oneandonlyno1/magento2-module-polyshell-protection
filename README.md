@@ -134,8 +134,8 @@ This module implements **eight layered Magento plugins** and **three security mo
 
 | Plugin | Target Class | Strategy |
 |--------|-------------|----------|
-| `HardenImageContentValidatorPlugin` | `ImageContentValidator` | After core validation, enforces strict image-only extension allowlist, blocks files with no extension, infers extensions from MIME type for extension-less REST payloads, validates inferred filenames for path separators and control characters, detects double-extension attacks (`.php.jpg`), scans base64 content for polyglot payloads. Integrates MarkShust_PolyshellPatch's extension check. |
-| `HardenImageProcessorPlugin` | `ImageProcessor` | Before file write, locks the Uploader's allowed extensions via reflection, infers extensions from MIME type for extension-less payloads, validates inferred filenames for path traversal and control characters, blocks non-image extensions, scans for polyglot content. |
+| `HardenImageContentValidatorPlugin` | `ImageContentValidator` | After core validation, enforces a strict image-only extension allowlist, allows extension-less uploads only when the MIME type is present and maps to an allowed image extension, blocks extension-less uploads when the MIME type is missing or unmapped, validates inferred filenames via FileUploadGuard's canonical safety checks (path separators, control characters, attack patterns, length limits), detects double-extension attacks (`.php.jpg`), scans base64 content for polyglot payloads. Integrates MarkShust_PolyshellPatch's extension check. |
+| `HardenImageProcessorPlugin` | `ImageProcessor` | Before file write, locks the Uploader's allowed extensions via reflection, allows extension-less payloads only when the MIME type can be mapped to an allowed image extension, validates inferred filenames via FileUploadGuard's canonical safety checks, blocks uploads with missing or unmapped MIME types and non-image extensions, scans for polyglot content. |
 
 ### Security Models
 

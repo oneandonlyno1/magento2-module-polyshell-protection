@@ -33,6 +33,8 @@ class HardenImageProcessorPlugin
 {
     private static ?\ReflectionProperty $uploaderProperty = null;
 
+    private FileUploadGuard $fileUploadGuard;
+
     private PolyglotFileDetector $polyglotDetector;
 
     private Logger $logger;
@@ -40,10 +42,12 @@ class HardenImageProcessorPlugin
     private SecurityLogSanitizer $logSanitizer;
 
     public function __construct(
+        FileUploadGuard $fileUploadGuard,
         PolyglotFileDetector $polyglotDetector,
         Logger $logger,
         SecurityLogSanitizer $logSanitizer
     ) {
+        $this->fileUploadGuard = $fileUploadGuard;
         $this->polyglotDetector = $polyglotDetector;
         $this->logger = $logger;
         $this->logSanitizer = $logSanitizer;
@@ -80,7 +84,7 @@ class HardenImageProcessorPlugin
 
         $extension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
 
-        // For extension-less REST payloads, infer extension from trusted MIME type.
+        // For extension-less REST payloads, infer extension from claimed MIME type.
         if ($extension === '') {
             $inferredExtension = FileUploadGuard::inferExtensionFromMimeType($mimeType);
             if ($inferredExtension === null) {
@@ -88,19 +92,17 @@ class HardenImageProcessorPlugin
                 throw new InputException(__('Image file must include a valid file extension.'));
             }
 
-            $normalizedFileName = rtrim($fileName, " \t\n\r\0\x0B.");
-            if ($normalizedFileName === '') {
-                $this->logBlock('empty filename', '', $entityType);
-                throw new InputException(__('Image file name is required.'));
+            $trimmedFileName = rtrim($fileName, " \t\n\r\0\x0B.");
+            $inferredFileName = $trimmedFileName . '.' . $inferredExtension;
+
+            try {
+                $this->fileUploadGuard->assertSafeFileName($inferredFileName);
+            } catch (InputException $e) {
+                $this->logBlock('unsafe inferred filename', $fileName, $entityType);
+                throw $e;
             }
 
-            // Reject path separators and control characters in the base name.
-            if (preg_match('/[\\\\\/\x00-\x1F\x7F]/', $normalizedFileName) === 1) {
-                $this->logBlock('invalid filename characters', $fileName, $entityType);
-                throw new InputException(__('Image file name contains invalid characters.'));
-            }
-
-            $fileName = $normalizedFileName . '.' . $inferredExtension;
+            $fileName = $inferredFileName;
             $imageContent->setName($fileName);
             $extension = $inferredExtension;
         }

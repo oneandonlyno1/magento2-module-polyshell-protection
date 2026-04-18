@@ -53,11 +53,16 @@ class FileUploadGuard
     ];
 
     /**
-     * Infer a file extension from a trusted MIME type.
+     * Infer a file extension from a claimed/provided MIME type.
+     *
+     * This MIME type may originate from client-controlled input and must not be
+     * treated as authoritative. It is used only as a hint for extension-less
+     * payloads and is constrained by the strict allowlist in MIME_EXTENSION_MAP.
      *
      * Normalizes the MIME type (lowercase, trim, strip parameters like charset)
      * and looks it up in MIME_EXTENSION_MAP. Returns null if the MIME type is
-     * empty, null, or not in the allowlist.
+     * empty, null, or not in the allowlist. Prefer using this only alongside
+     * stronger validation rather than as a substitute for content-based checks.
      */
     public static function inferExtensionFromMimeType(?string $mimeType): ?string
     {
