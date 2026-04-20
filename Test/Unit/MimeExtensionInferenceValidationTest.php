@@ -14,6 +14,7 @@ use Aregowe\PolyShellProtection\Logger\Logger;
 use Magento\Framework\Api\Data\ImageContentInterface;
 use Magento\Framework\Api\ImageContentValidator;
 use Magento\Framework\Api\ImageProcessor;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Exception\InputException;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -51,9 +52,16 @@ class MimeExtensionInferenceValidationTest extends TestCase
         $this->polyglotDetector = new PolyglotFileDetector();
         $this->logSanitizer = new SecurityLogSanitizer();
 
+        $scopeConfig = $this->createMock(ScopeConfigInterface::class);
+        $scopeConfig->method('getValue')->willReturnMap([
+            [FileUploadGuard::XML_PATH_ADDITIONAL_EXTENSIONS, null, null, ''],
+            [FileUploadGuard::XML_PATH_ADDITIONAL_BLOCKED_EXTENSIONS, null, null, ''],
+        ]);
+
         $fileUploadGuard = new FileUploadGuard(
             new PolyglotFileDetector(),
-            new AttackPatternDetector()
+            new AttackPatternDetector(),
+            $scopeConfig
         );
 
         $this->validatorPlugin = new HardenImageContentValidatorPlugin(

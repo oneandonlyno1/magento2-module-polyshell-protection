@@ -53,7 +53,7 @@ Mark Shust's module provided a focused two-plugin fix that enforced a 4-extensio
 - Known attack filename/pattern matching
 - Request path blocking at the FrontController and `pub/get.php` level
 - Controller-level upload blocking for customer attribute and file upload endpoints
-- A kill switch blocking all custom option file uploads via the Webapi File Processor
+- Configurable filename validation for custom option file uploads via the Webapi File Processor, with admin-configurable allowed and blocked extension lists
 
 The `composer.json` includes a `"replace"` directive for `markshust/magento2-module-polyshell-patch`, so Composer will automatically handle the transition.
 
@@ -122,13 +122,13 @@ This module implements **eight layered Magento plugins** and **three security mo
 | `BlockCustomerAttributeFileUploadControllerPlugin` | `AbstractUploadFile` | Blocks ALL customer attribute file upload controllers at the entry point. Returns JSON error. |
 | `BlockCustomerFileUploadPlugin` | `FileProcessor` | Blocks `saveTemporaryFile` and `moveTemporaryFile` for `customer_address`, `customer_addresses`, and `custom_options` entity types. Fails closed if reflection cannot read entity type. |
 
-#### Layer 3 — Custom Option Upload Blocking
+#### Layer 3 — Custom Option Upload Validation
 
 | Plugin | Target Class | Strategy |
 |--------|-------------|----------|
-| `ValidateUploadedFileNamePlugin` | `File\Processor` (Webapi) | **Kill switch** — unconditionally blocks ALL custom option file uploads via the Webapi File Processor. |
+| `ValidateUploadedFileNamePlugin` | `File\Processor` (Webapi) | Validates the filename of custom option file uploads against the merged allowlist/blocklist via `FileUploadGuard::assertSafeFileName()`. Safe files pass through; dangerous files are blocked with a logged warning. |
 | `ValidateUploadedFileContentPlugin` | `File\Processor` (Webapi) | Validates filename safety (extension, pattern, obfuscation) and scans file content for polyglot/embedded PHP. |
-| `ValidateCustomOptionUploadPlugin` | `CustomOptionProcessor` | Detects file payloads in cart item custom options and blocks the entire request. |
+| `ValidateCustomOptionUploadPlugin` | `CustomOptionProcessor` | Validates filenames in custom option `file_info` payloads at cart/quote level via `FileUploadGuard::assertSafeFileName()`. Iterates all custom options; cart items without file payloads pass through unmodified. |
 
 #### Layer 4 — Framework-Level Image Hardening
 
@@ -141,7 +141,7 @@ This module implements **eight layered Magento plugins** and **three security mo
 
 | Model | Responsibility |
 |-------|---------------|
-| `FileUploadGuard` | Orchestrates filename validation: extension allowlist, blocked-extension pattern matching, private multi-pass normalization (unicode decoding, URL decoding, CR/LF/TAB replacement, whitespace collapse), MIME-to-extension inference via `inferExtensionFromMimeType()`, and a combined infer-validate-normalize flow via `inferExtensionForFileName()` used by both image-hardening plugins. Delegates attack-pattern and polyglot detection to AttackPatternDetector and PolyglotFileDetector. |
+| `FileUploadGuard` | Orchestrates filename validation: configurable extension allowlist/blocklist (base code-defined sets merged with admin-configured additions via `getAllowedExtensions()` / `getBlockedExtensions()`), blocked-extension pattern matching, private multi-pass normalization (unicode decoding, URL decoding, CR/LF/TAB replacement, whitespace collapse), MIME-to-extension inference via `inferExtensionFromMimeType()`, and a combined infer-validate-normalize flow via `inferExtensionForFileName()` used by both image-hardening plugins. The blocklist always overrides all allowlists. Delegates attack-pattern and polyglot detection to AttackPatternDetector and PolyglotFileDetector. |
 | `AttackPatternDetector` | Maintains a list of known attack filenames and regex patterns observed in active PolyShell campaigns. Blocks exact filename matches and suspicious patterns (option_id + index.php, double extensions, shell/backdoor naming, obfuscation hints). |
 | `PolyglotFileDetector` | Detects polyglot files by checking if content starts with an image signature (PNG, GIF, JPEG, RIFF, ICO, CUR, BMP) and then scanning for embedded PHP code patterns (`<?php`, `eval(`, `system(`, `exec(`, etc.) and known attack beacon signatures (`409723*20`, campaign-specific MD5 hashes). |
 | `SecurityPathGuard` | Evaluates request paths and media-relative paths against blocked directory prefixes (`/media/customer_address`, `/media/custom_options`, etc.). |
@@ -151,13 +151,40 @@ This module implements **eight layered Magento plugins** and **three security mo
 
 - **Nginx deny rules** — recommended in tandem with this module to block direct access to `pub/media/custom_options/` at the web server level.
 
+## Admin Configuration
+
+The module provides an admin panel at **Stores > Configuration > PolyShell Protection** for configuring file upload extension policies without code changes.
+
+### File Upload Settings
+
+| Setting | Description |
+|---------|-------------|
+| **Base Allowed Extensions (read-only note)** | Displays the code-defined base allowlist: `7z, bmp, csv, doc, docx, gif, heic, jpeg, jpg, ods, odt, pdf, png, rar, rtf, txt, webp, xls, xlsx, zip`. |
+| **Additional Allowed Extensions** | Comma-separated list of extra extensions to allow (e.g. `ai, psd, svg`). Case-insensitive. Extensions that match blocked patterns are always rejected regardless of this setting. |
+| **Base Blocked Extensions (read-only note)** | Displays the code-defined base blocklist: `asp, aspx, bat, cgi, cmd, com, dll, exe, jar, js, jsp, mjs, msi, phar, php (incl. php3–php8), pht, phtml, phtm, pl, ps1, py, sh, shtml, so, vbs`. Double-extension patterns (e.g. `file.php.jpg`) are also blocked automatically. |
+| **Additional Blocked Extensions** | Comma-separated list of extra extensions to block (e.g. `svg, swf, html`). Case-insensitive. **Overrides all allowlists** — if an extension appears here and in the allowed list, it will be blocked. |
+
+### Precedence Rules
+
+1. The **blocklist always wins**. If an extension appears in both the allowed and blocked lists, it is blocked.
+2. Admin-configured extensions are merged with base code-defined sets at runtime.
+3. Extensions matching `BLOCKED_EXTENSION_PATTERN` (executable/script patterns and double-extension attacks) are **always** rejected, even if added to the allowed list via admin.
+
+### ACL
+
+Access to the configuration section requires the `Aregowe_PolyShellProtection::config` ACL resource, nested under **Stores > Settings > Configuration**.
+
 ## Module Structure
 
 ```
 app/code/Aregowe/PolyShellProtection/
 ├── etc/
 │   ├── module.xml                     # Module declaration
-│   └── di.xml                         # Plugin wiring and DI configuration
+│   ├── di.xml                         # Plugin wiring and DI configuration
+│   ├── acl.xml                        # ACL resource for admin config access
+│   ├── config.xml                     # Default configuration values
+│   └── adminhtml/
+│       └── system.xml                 # Admin UI: Stores > Config > PolyShell Protection
 ├── Logger/
 │   ├── Logger.php                     # Dedicated Monolog logger channel
 │   └── Handler/

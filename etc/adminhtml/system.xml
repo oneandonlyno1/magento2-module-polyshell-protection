@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
+    <system>
+        <section id="aregowe_polyshell" translate="label" type="text" sortOrder="910" showInDefault="1" showInWebsite="0" showInStore="0">
+            <label>PolyShell Protection</label>
+            <tab>security</tab>
+            <resource>Aregowe_PolyShellProtection::config</resource>
+            <group id="upload_settings" translate="label comment" type="text" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                <label>File Upload Settings</label>
+                <comment><![CDATA[Configure which file extensions are permitted for customer file uploads (e.g. custom product options). Extensions matching blocked patterns (php, phtml, exe, etc.) are <strong>always</strong> rejected regardless of this setting.]]></comment>
+                <field id="base_allowed_extensions_note" translate="label comment" type="note" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Base Allowed Extensions (code-defined)</label>
+                    <comment><![CDATA[7z, bmp, csv, doc, docx, gif, heic, jpeg, jpg, ods, odt, pdf, png, rar, rtf, txt, webp, xls, xlsx, zip]]></comment>
+                </field>
+                <field id="additional_allowed_extensions" translate="label comment" type="text" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Additional Allowed Extensions</label>
+                    <comment><![CDATA[Comma-separated list of additional file extensions to allow (e.g. <code>ai, psd, svg</code>). Case-insensitive. Extensions that appear in the blocked list will <strong>always</strong> be rejected.]]></comment>
+                </field>
+                <field id="base_blocked_extensions_note" translate="label comment" type="note" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Base Blocked Extensions (code-defined)</label>
+                    <comment><![CDATA[asp, aspx, bat, cgi, cmd, com, dll, exe, jar, js, jsp, mjs, msi, phar, php (incl. php3–php8), pht, phtml, phtm, pl, ps1, py, sh, shtml, so, vbs<br/><em>Double-extension patterns (e.g. file.php.jpg) are also blocked automatically.</em>]]></comment>
+                </field>
+                <field id="additional_blocked_extensions" translate="label comment" type="text" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Additional Blocked Extensions</label>
+                    <comment><![CDATA[Comma-separated list of additional file extensions to block (e.g. <code>svg, swf, html</code>). Case-insensitive. <strong>Overrides all allowlists</strong> — if an extension appears here and in the allowed list, it will be blocked.]]></comment>
+                </field>
+            </group>
+        </section>
+    </system>
+</config>

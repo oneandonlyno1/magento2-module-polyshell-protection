@@ -36,7 +36,7 @@ When asked to review, work through sections interactively (Architecture → Code
 
 These guide all recommendations and code generation:
 
-- **DRY is important.** Flag repetition aggressively. Shared constants already live in `FileUploadGuard` (e.g., `ALLOWED_IMAGE_EXTENSIONS`, `MIME_EXTENSION_MAP`, `BLOCKED_EXTENSION_PATTERN`). Shared utility methods like `FileUploadGuard::inferExtensionFromMimeType()` and `FileUploadGuard::inferExtensionForFileName()` centralize cross-plugin logic. Never duplicate them.
+- **DRY is important.** Flag repetition aggressively. Shared constants already live in `FileUploadGuard` (e.g., `ALLOWED_IMAGE_EXTENSIONS`, `MIME_EXTENSION_MAP`, `BLOCKED_EXTENSION_PATTERN`, `BASE_ALLOWED_EXTENSIONS`, `BASE_BLOCKED_EXTENSIONS`). Shared utility methods like `FileUploadGuard::inferExtensionFromMimeType()`, `FileUploadGuard::inferExtensionForFileName()`, `FileUploadGuard::getAllowedExtensions()`, and `FileUploadGuard::getBlockedExtensions()` centralize cross-plugin logic. Never duplicate them.
 - **Follow modern code standards** for PHP 8.1-compatible code, XML, JSON, and Adobe Commerce conventions.
 - **Well-tested code is non-negotiable.** Favor more tests over fewer. Every public method, every edge case, every failure path.
 - **Keep code engineered enough.** Avoid under-engineered fragility and over-engineered premature abstraction.
@@ -56,7 +56,7 @@ The module implements four defensive layers, each blocking attacks at a differen
 |-------|---------|---------|------------|
 | 1 — Request Path Blocking | Block HTTP requests to vulnerable media paths before routing | `BlockSuspiciousMediaPathPlugin`, `BlockSuspiciousMediaAppPathPlugin` | 5 |
 | 2 — Controller & Upload Blocking | Block file upload controllers and file processor methods for dangerous entity types | `BlockCustomerAttributeFileUploadControllerPlugin`, `BlockCustomerFileUploadPlugin` | 1 |
-| 3 — Custom Option Upload Blocking | Kill-switch and deep validation on custom option file uploads via REST API | `ValidateUploadedFileNamePlugin`, `ValidateUploadedFileContentPlugin`, `ValidateCustomOptionUploadPlugin` | 5, 10 |
+| 3 — Custom Option Upload Validation | Filename validation and deep content scanning on custom option file uploads via REST API | `ValidateUploadedFileNamePlugin`, `ValidateUploadedFileContentPlugin`, `ValidateCustomOptionUploadPlugin` | 5, 10 |
 | 4 — Framework-Level Image Hardening | Extension allowlisting, double-extension detection, polyglot scanning at the framework image validator/processor | `HardenImageContentValidatorPlugin`, `HardenImageProcessorPlugin` | 10 |
 
 ### Model Dependency Graph
@@ -65,8 +65,11 @@ The module implements four defensive layers, each blocking attacks at a differen
 FileUploadGuard (orchestrator)
 ├── PolyglotFileDetector (image + embedded PHP detection)
 ├── AttackPatternDetector (known filenames / regex patterns)
+├── ScopeConfigInterface (admin-configured extension allowlist/blocklist)
 │
-└── Used by: ValidateUploadedFileContentPlugin,
+└── Used by: ValidateUploadedFileNamePlugin,
+             ValidateUploadedFileContentPlugin,
+             ValidateCustomOptionUploadPlugin,
              HardenImageContentValidatorPlugin,
              HardenImageProcessorPlugin
 
@@ -368,10 +371,14 @@ When adding new patterns to `AttackPatternDetector::ATTACK_FILENAMES` or `ATTACK
 2. Add a corresponding test case in `AttackPatternDetectorTest`.
 3. Verify the pattern does not false-positive on legitimate filenames (test both block and allow).
 
-### Extension Allowlists
+### Extension Allowlists and Blocklists
 
-- `FileUploadGuard::ALLOWED_EXTENSIONS` — general upload allowlist (documents + images).
-- `FileUploadGuard::ALLOWED_IMAGE_EXTENSIONS` — image-only allowlist used by image hardening plugins.
+- `FileUploadGuard::BASE_ALLOWED_EXTENSIONS` — base general upload allowlist (documents + images), code-defined.
+- `FileUploadGuard::BASE_BLOCKED_EXTENSIONS` — base blocklist of executable/script extensions, code-defined.
+- `FileUploadGuard::getAllowedExtensions()` — returns the merged allowlist: base + admin-configured additions, minus any blocked extensions. The blocklist always overrides.
+- `FileUploadGuard::getBlockedExtensions()` — returns the merged blocklist: base + admin-configured additions.
+- `FileUploadGuard::ALLOWED_IMAGE_EXTENSIONS` — image-only allowlist used by image hardening plugins (not configurable via admin).
+- Admin-configured extensions are read from `ScopeConfigInterface` at runtime (`XML_PATH_ADDITIONAL_EXTENSIONS`, `XML_PATH_ADDITIONAL_BLOCKED_EXTENSIONS`).
 - These are the single source of truth. **Never hardcode extension lists in plugins.**
 
 ### Content Scanning
@@ -409,6 +416,39 @@ Plugins must not call `normalizeFileName()` directly. Instead, use the public me
 
 ---
 
+## Admin Configuration Conventions
+
+### Config Paths
+
+- Config paths use the `aregowe_polyshell/` section prefix (e.g., `aregowe_polyshell/upload_settings/additional_allowed_extensions`).
+- Path constants are defined as public constants on the relevant model (e.g., `FileUploadGuard::XML_PATH_ADDITIONAL_EXTENSIONS`).
+- Use `ScopeConfigInterface::getValue()` to read config values at runtime. Cast to `(string)` and handle empty values gracefully.
+
+### ACL
+
+- The admin configuration section is protected by `Aregowe_PolyShellProtection::config`, declared in `etc/acl.xml`.
+- New admin config sections must reference this ACL resource (or a child of it).
+
+### system.xml
+
+- All admin-facing settings live in `etc/adminhtml/system.xml`.
+- The section ID is `aregowe_polyshell`, placed in the `security` tab.
+- Use `<field type="note">` for read-only informational items (e.g., displaying base code-defined extension lists).
+- Use `<comment>` with CDATA for HTML formatting.
+
+### config.xml
+
+- Default values for all config fields are declared in `etc/config.xml`.
+- Empty-string defaults are expressed as self-closing elements (e.g., `<additional_allowed_extensions/>`).
+
+### Blocklist-Overrides-Allowlist Rule
+
+- The blocked extension list **always** overrides all allowlists. If an extension appears in both, it must be blocked.
+- Extensions matching `BLOCKED_EXTENSION_PATTERN` (executable/script patterns) must be rejected regardless of admin config.
+- This invariant is enforced in `FileUploadGuard::getAllowedExtensions()` and documented in inline comments.
+
+---
+
 ## Composer Conventions
 
 - Package: `aregowe/magento2-module-polyshell-protection`
@@ -428,7 +468,11 @@ Plugins must not call `normalizeFileName()` directly. Instead, use the public me
 ├── README.md
 ├── etc/
 │   ├── module.xml
-│   └── di.xml
+│   ├── di.xml
+│   ├── acl.xml
+│   ├── config.xml
+│   └── adminhtml/
+│       └── system.xml
 ├── Logger/
 │   ├── Logger.php
 │   └── Handler/

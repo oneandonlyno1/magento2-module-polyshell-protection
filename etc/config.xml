@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+    <default>
+        <aregowe_polyshell>
+            <upload_settings>
+                <additional_allowed_extensions/>
+                <additional_blocked_extensions/>
+            </upload_settings>
+        </aregowe_polyshell>
+    </default>
+</config>
