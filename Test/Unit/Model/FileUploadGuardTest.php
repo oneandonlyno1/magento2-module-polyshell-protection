@@ -23,8 +23,8 @@ class FileUploadGuardTest extends TestCase
         $this->scopeConfig = $this->createMock(ScopeConfigInterface::class);
         $this->scopeConfig->method('getValue')
             ->willReturnMap([
-                [FileUploadGuard::XML_PATH_ADDITIONAL_EXTENSIONS, ''],
-                [FileUploadGuard::XML_PATH_ADDITIONAL_BLOCKED_EXTENSIONS, ''],
+                [FileUploadGuard::XML_PATH_ADDITIONAL_EXTENSIONS, 'default', null, ''],
+                [FileUploadGuard::XML_PATH_ADDITIONAL_BLOCKED_EXTENSIONS, 'default', null, ''],
             ]);
 
         $this->guard = new FileUploadGuard(
@@ -42,8 +42,8 @@ class FileUploadGuardTest extends TestCase
         $scopeConfig = $this->createMock(ScopeConfigInterface::class);
         $scopeConfig->method('getValue')
             ->willReturnMap([
-                [FileUploadGuard::XML_PATH_ADDITIONAL_EXTENSIONS, $allowedExtras],
-                [FileUploadGuard::XML_PATH_ADDITIONAL_BLOCKED_EXTENSIONS, $blockedExtras],
+                [FileUploadGuard::XML_PATH_ADDITIONAL_EXTENSIONS, 'default', null, $allowedExtras],
+                [FileUploadGuard::XML_PATH_ADDITIONAL_BLOCKED_EXTENSIONS, 'default', null, $blockedExtras],
             ]);
 
         return new FileUploadGuard(
