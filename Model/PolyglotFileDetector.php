@@ -136,12 +136,8 @@ class PolyglotFileDetector
         // Check for PHP code markers
         foreach (self::PHP_CODE_PATTERNS as $pattern) {
             if (stripos($contentSearchable, $pattern) !== false) {
-                $contextFile = $filename ? sprintf(' in file %s', $filename) : '';
                 throw new InputException(
-                    __(
-                        'Uploaded file contains executable code and is not permitted for security reasons.%1',
-                        $contextFile
-                    )
+                    __('Uploaded file contains executable code and is not permitted for security reasons.')
                 );
             }
         }
@@ -149,12 +145,8 @@ class PolyglotFileDetector
         // Check for known attack signatures
         foreach (self::ATTACK_SIGNATURES as $signature) {
             if (stripos($contentSearchable, $signature) !== false) {
-                $contextFile = $filename ? sprintf(' in file %s', $filename) : '';
                 throw new InputException(
-                    __(
-                        'Uploaded file matches known malicious payload signature.%1',
-                        $contextFile
-                    )
+                    __('Uploaded file matches known malicious payload signature.')
                 );
             }
         }
